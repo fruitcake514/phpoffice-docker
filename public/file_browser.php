@@ -34,7 +34,8 @@ $files = listFiles($currentDir);
         </form>
 
         <h2>Files and Directories</h2>
-        <ul>
+        <a href="create.php">Create New File</a>
+        <ul>            
             <?php foreach ($files as $file): ?>
                 <li>
                     <?php if (is_dir($currentDir . '/' . $file)): ?>
