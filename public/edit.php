@@ -79,5 +79,6 @@ if ($file) {
         </form>
         <a href="file_browser.php">Back to File Browser</a>
     </div>
+      <script src="assets/script.js"></script>
 </body>
 </html>
