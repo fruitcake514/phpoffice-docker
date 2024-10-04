@@ -4,7 +4,7 @@ services:
   phpoffice:
     build:
       context: https://github.com/fruitcake514/phpoffice-docker.git
-      dockerfile: Dockerfile  # Specify your Dockerfile if it's in the root
+      dockerfile: Dockerfile
     volumes:
       - ./mnt:/app/mnt
     ports:
