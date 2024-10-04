@@ -17,6 +17,9 @@ WORKDIR /app
 # Copy the composer.json and composer.lock (if it exists) to the working directory
 COPY composer.json composer.lock* ./
 
+# Set the environment variable for Composer
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
 # Install project dependencies using Composer
 RUN composer install --no-interaction --prefer-dist
 
