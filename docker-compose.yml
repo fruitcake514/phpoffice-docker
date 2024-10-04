@@ -9,5 +9,7 @@ services:
       - ./mnt:/app/mnt
     ports:
       - "8080:80"
+    environment:
+      - PHP_MEMORY_LIMIT=512M
     stdin_open: true
     tty: true
