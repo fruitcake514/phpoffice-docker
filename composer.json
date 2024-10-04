@@ -1,23 +1,7 @@
 {
     "require": {
-        "phpoffice/phpspreadsheet": "^1.23",  // Latest stable version
-        "phpoffice/phpword": "^0.18",         // Latest stable version
-        "phpoffice/phppresentation": "^0.8"    // Latest stable version
-    },
-    "autoload": {
-        "psr-4": {
-            "App\\": "src/"                     // Adjust this if your application code is in a different directory
-        }
-    },
-    "scripts": {
-        "post-autoload-dump": [
-            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
-            "php artisan package:discover --ansi"
-        ]
-    },
-    "minimum-stability": "stable",
-    "prefer-stable": true,
-    "config": {
-        "optimize-autoloader": true
+        "phpoffice/phpspreadsheet": "^1.23",
+        "phpoffice/phpword": "^0.18",
+        "phpoffice/phppresentation": "^0.8"
     }
 }
