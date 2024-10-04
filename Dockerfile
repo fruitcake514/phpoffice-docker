@@ -26,13 +26,16 @@ WORKDIR /app
 RUN git clone https://github.com/fruitcake514/phpoffice-docker.git .
 
 # Install PHPOffice libraries
-RUN composer require phpoffice/phpspreadsheet phpoffice/phpword phpoffice/phppresentation
+RUN composer install --no-dev --optimize-autoloader
 
 # Copy configuration files
 COPY nginx.conf /etc/nginx/sites-available/default
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Set permissions
+# Create mnt directory and set permissions
+RUN mkdir -p /app/mnt && chown -R www-data:www-data /app/mnt && chmod -R 755 /app/mnt
+
+# Set permissions for the entire app directory
 RUN chown -R www-data:www-data /app \
     && chmod -R 755 /app
 
