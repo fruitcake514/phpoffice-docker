@@ -32,9 +32,6 @@ RUN composer require phpoffice/phpspreadsheet phpoffice/phpword phpoffice/phppre
 COPY nginx.conf /etc/nginx/sites-available/default
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Create a simple PHP interface
-COPY index.php /app/public/index.php
-
 # Set permissions
 RUN chown -R www-data:www-data /app \
     && chmod -R 755 /app
