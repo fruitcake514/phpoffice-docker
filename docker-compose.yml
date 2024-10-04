@@ -2,10 +2,12 @@ version: '3.8'
 
 services:
   phpoffice:
-    build: .
+    build:
+      context: https://github.com/fruitcake514/phpoffice-docker.git
+      dockerfile: Dockerfile  # Specify your Dockerfile if it's in the root
     volumes:
       - ./mnt:/app/mnt
     ports:
       - "8080:80"
-    stdin_open: true # keep STDIN open even if not attached
+    stdin_open: true  # keep STDIN open even if not attached
     tty: true
