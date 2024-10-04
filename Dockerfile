@@ -1,12 +1,14 @@
 # Use the official PHP image from the Docker Hub
 FROM php:8.1-fpm
 
-# Install dependencies
+# Install dependencies and required PHP extensions
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
     nginx \
-    && docker-php-ext-install pdo pdo_mysql
+    libzip-dev \
+    libgd-dev \
+    && docker-php-ext-install pdo pdo_mysql zip gd
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
