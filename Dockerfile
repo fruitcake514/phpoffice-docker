@@ -32,11 +32,11 @@ RUN composer install --no-interaction --prefer-dist
 # Copy Nginx configuration
 COPY nginx.conf /etc/nginx/sites-available/default
 
-# Copy supervisord configuration
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+# Create supervisord.conf inside the Dockerfile instead of copying
+RUN echo "[supervisord]\nnodaemon=true\n\n[program:nginx]\ncommand=nginx -g 'daemon off;'\nautostart=true\nautorestart=true\n\n[program:php-fpm]\ncommand=php-fpm\nautostart=true\nautorestart=true" > /etc/supervisor/conf.d/supervisord.conf
 
 # Expose the port
 EXPOSE 80
 
 # Start supervisord to manage Nginx and PHP-FPM
-CMD ["/usr/bin/supervisord"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
