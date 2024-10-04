@@ -64,7 +64,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     break;
             }
         } catch (Exception $e) {
-            echo "Error: " . $e->getMessage();
+            echo "Error: " . $e->getMessage() . "<br>";
+            echo "File: " . $e->getFile() . "<br>";
+            echo "Line: " . $e->getLine() . "<br>";
+            echo "Trace: <pre>" . $e->getTraceAsString() . "</pre>";
             exit;
         }
         
@@ -86,12 +89,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 if ($debug) {
     echo "Current file: " . __FILE__ . "<br>";
     echo "Current directory: " . getcwd() . "<br>";
+    echo "Current user: " . exec('whoami') . "<br>";
     echo "Parent directory contents:<br>";
     print_r(scandir(dirname(__FILE__) . '/..'));
     echo "<br>Vendor directory contents:<br>";
     print_r(scandir(dirname(__FILE__) . '/../vendor'));
     echo "<br>Mnt directory contents:<br>";
     print_r(scandir('/app/mnt'));
+    echo "<br>Mnt directory permissions:<br>";
+    echo exec('ls -l /app/mnt');
     echo "<br>";
 }
 ?>
