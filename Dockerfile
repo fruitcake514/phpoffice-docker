@@ -20,12 +20,6 @@ WORKDIR /app
 # Clone the GitHub repository (this will pull everything into /app)
 RUN git clone https://github.com/fruitcake514/phpoffice-docker.git .
 
-# Copy the composer.json and composer.lock (if it exists) to the working directory
-COPY composer.json composer.lock* ./
-
-# Set the environment variable for Composer
-ENV COMPOSER_ALLOW_SUPERUSER=1
-
 # Install project dependencies using Composer
 RUN composer install --no-interaction --prefer-dist
 
@@ -37,8 +31,8 @@ RUN mkdir -p /var/log/nginx \
     && chown -R www-data:www-data /var/log/nginx \
     && chmod 755 /var/log/nginx
 
-# Create supervisord.conf
-RUN echo "[supervisord]\nnodaemon=true\n\n[program:nginx]\ncommand=nginx -g 'daemon off;'\nautostart=true\nautorestart=true\nstdout_logfile=/dev/stdout\nstdout_logfile_maxbytes=0\nstderr_logfile=/dev/stderr\nstderr_logfile_maxbytes=0\n\n[program:php-fpm]\ncommand=php-fpm\nautostart=true\nautorestart=true\nstdout_logfile=/dev/stdout\nstdout_logfile_maxbytes=0\nstderr_logfile=/dev/stderr\nstderr_logfile_maxbytes=0" > /etc/supervisor/conf.d/supervisord.conf
+# Copy supervisord configuration
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Expose the port
 EXPOSE 80
