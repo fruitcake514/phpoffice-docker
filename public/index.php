@@ -1,6 +1,6 @@
 <?php
 // Debug mode flag
-$debug = false;
+$debug = true;
 
 // If debug mode is on, display errors
 if ($debug) {
@@ -21,7 +21,7 @@ function createSpreadsheet() {
     $sheet->setCellValue('A1', 'Hello World!');
     
     $writer = new Xlsx($spreadsheet);
-    $filename = '../mnt/hello_world.xlsx';
+    $filename = '/app/mnt/hello_world.xlsx';
     $writer->save($filename);
     return $filename;
 }
@@ -31,7 +31,7 @@ function createDocument() {
     $section = $phpWord->addSection();
     $section->addText('Hello World!');
     
-    $filename = '../mnt/hello_world.docx';
+    $filename = '/app/mnt/hello_world.docx';
     $phpWord->save($filename, 'Word2007');
     return $filename;
 }
@@ -42,7 +42,7 @@ function createPresentation() {
     $shape = $slide->createRichTextShape();
     $shape->createTextRun('Hello World!');
     
-    $filename = '../mnt/hello_world.pptx';
+    $filename = '/app/mnt/hello_world.pptx';
     $writer = \PhpOffice\PhpPresentation\IOFactory::createWriter($presentation, 'PowerPoint2007');
     $writer->save($filename);
     return $filename;
@@ -50,17 +50,24 @@ function createPresentation() {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
-        switch ($_POST['action']) {
-            case 'spreadsheet':
-                $file = createSpreadsheet();
-                break;
-            case 'document':
-                $file = createDocument();
-                break;
-            case 'presentation':
-                $file = createPresentation();
-                break;
+        $file = null;
+        try {
+            switch ($_POST['action']) {
+                case 'spreadsheet':
+                    $file = createSpreadsheet();
+                    break;
+                case 'document':
+                    $file = createDocument();
+                    break;
+                case 'presentation':
+                    $file = createPresentation();
+                    break;
+            }
+        } catch (Exception $e) {
+            echo "Error: " . $e->getMessage();
+            exit;
         }
+        
         if (isset($file) && file_exists($file)) {
             header("Content-Type: application/octet-stream");
             header("Content-Transfer-Encoding: Binary");
@@ -83,6 +90,8 @@ if ($debug) {
     print_r(scandir(dirname(__FILE__) . '/..'));
     echo "<br>Vendor directory contents:<br>";
     print_r(scandir(dirname(__FILE__) . '/../vendor'));
+    echo "<br>Mnt directory contents:<br>";
+    print_r(scandir('/app/mnt'));
     echo "<br>";
 }
 ?>
