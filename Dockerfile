@@ -13,8 +13,11 @@ RUN apt-get update && apt-get install -y \
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Set the working directory
+# Set the working directory for the application
 WORKDIR /app
+
+# Clone the GitHub repository (this will pull everything into /app)
+RUN git clone https://github.com/fruitcake514/phpoffice-docker.git .
 
 # Copy the composer.json and composer.lock (if it exists) to the working directory
 COPY composer.json composer.lock* ./
@@ -24,9 +27,6 @@ ENV COMPOSER_ALLOW_SUPERUSER=1
 
 # Install project dependencies using Composer
 RUN composer install --no-interaction --prefer-dist
-
-# Clone the GitHub repository (replace with your actual GitHub repo URL)
-RUN git clone https://github.com/fruitcake514/phpoffice-docker.git .
 
 # Copy Nginx configuration
 COPY nginx.conf /etc/nginx/sites-available/default
