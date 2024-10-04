@@ -32,8 +32,13 @@ RUN composer install --no-interaction --prefer-dist
 # Copy Nginx configuration
 COPY nginx.conf /etc/nginx/sites-available/default
 
-# Create supervisord.conf inside the Dockerfile instead of copying
-RUN echo "[supervisord]\nnodaemon=true\n\n[program:nginx]\ncommand=nginx -g 'daemon off;'\nautostart=true\nautorestart=true\n\n[program:php-fpm]\ncommand=php-fpm\nautostart=true\nautorestart=true" > /etc/supervisor/conf.d/supervisord.conf
+# Create Nginx log directories and set permissions
+RUN mkdir -p /var/log/nginx \
+    && chown -R www-data:www-data /var/log/nginx \
+    && chmod 755 /var/log/nginx
+
+# Create supervisord.conf
+RUN echo "[supervisord]\nnodaemon=true\n\n[program:nginx]\ncommand=nginx -g 'daemon off;'\nautostart=true\nautorestart=true\nstdout_logfile=/dev/stdout\nstdout_logfile_maxbytes=0\nstderr_logfile=/dev/stderr\nstderr_logfile_maxbytes=0\n\n[program:php-fpm]\ncommand=php-fpm\nautostart=true\nautorestart=true\nstdout_logfile=/dev/stdout\nstdout_logfile_maxbytes=0\nstderr_logfile=/dev/stderr\nstderr_logfile_maxbytes=0" > /etc/supervisor/conf.d/supervisord.conf
 
 # Expose the port
 EXPOSE 80
