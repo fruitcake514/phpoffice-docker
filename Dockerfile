@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     nginx \
     libzip-dev \
     libgd-dev \
+    supervisor \
     && docker-php-ext-install pdo pdo_mysql zip gd
 
 # Install Composer
@@ -31,8 +32,11 @@ RUN composer install --no-interaction --prefer-dist
 # Copy Nginx configuration
 COPY nginx.conf /etc/nginx/sites-available/default
 
+# Copy supervisord configuration
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
 # Expose the port
 EXPOSE 80
 
-# Start Nginx and PHP-FPM
-CMD ["sh", "-c", "service nginx start && php-fpm"]
+# Start supervisord to manage Nginx and PHP-FPM
+CMD ["/usr/bin/supervisord"]
