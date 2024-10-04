@@ -1,5 +1,15 @@
 <?php
-require DIR . '/../vendor/autoload.php';
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+echo "Current file: " . __FILE__ . "<br>";
+echo "Current directory: " . getcwd() . "<br>";
+echo "Parent directory contents:<br>";
+print_r(scandir(dirname(__FILE__) . '/..'));
+echo "<br>Vendor directory contents (if exists):<br>";
+print_r(scandir(dirname(__FILE__) . '/../vendor'));
+
+require dirname(__FILE__) . '/../vendor/autoload.php';
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
