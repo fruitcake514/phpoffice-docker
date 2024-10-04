@@ -15,10 +15,12 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /app
 
 # Clone the GitHub repository (replace with your actual GitHub repo URL)
-RUN git clone https://github.com/fruitcake514/phpoffice-docker.git .
+RUN git clone https://github.com/PHPOffice/PhpSpreadsheet.git /app/PhpSpreadsheet \
+    && git clone https://github.com/PHPOffice/PHPWord.git /app/PHPWord \
+    && git clone https://github.com/PHPOffice/PHPPresentation.git /app/PHPPresentation
 
 # Install project dependencies using Composer
-RUN composer install
+RUN composer install --no-interaction --prefer-dist
 
 # Copy Nginx configuration
 COPY nginx.conf /etc/nginx/sites-available/default
@@ -26,5 +28,5 @@ COPY nginx.conf /etc/nginx/sites-available/default
 # Expose the port
 EXPOSE 80
 
-# Start Nginx and PHP
-CMD service nginx start && php-fpm
+# Start Nginx and PHP-FPM
+CMD ["sh", "-c", "service nginx start && php-fpm"]
