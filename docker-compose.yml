@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  phpoffice:
+    build: .
+    volumes:
+      - ./mnt:/app/mnt
+    ports:
+      - "8080:80"
+    stdin_open: true # keep STDIN open even if not attached
+    tty: true
