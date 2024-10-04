@@ -1,13 +1,12 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+// Debug mode flag
+$debug = false;
 
-echo "Current file: " . __FILE__ . "<br>";
-echo "Current directory: " . getcwd() . "<br>";
-echo "Parent directory contents:<br>";
-print_r(scandir(dirname(__FILE__) . '/..'));
-echo "<br>Vendor directory contents (if exists):<br>";
-print_r(scandir(dirname(__FILE__) . '/../vendor'));
+// If debug mode is on, display errors
+if ($debug) {
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+}
 
 require dirname(__FILE__) . '/../vendor/autoload.php';
 
@@ -22,7 +21,7 @@ function createSpreadsheet() {
     $sheet->setCellValue('A1', 'Hello World!');
     
     $writer = new Xlsx($spreadsheet);
-    $filename = 'hello_world.xlsx';
+    $filename = '../mnt/hello_world.xlsx';
     $writer->save($filename);
     return $filename;
 }
@@ -32,7 +31,7 @@ function createDocument() {
     $section = $phpWord->addSection();
     $section->addText('Hello World!');
     
-    $filename = 'hello_world.docx';
+    $filename = '../mnt/hello_world.docx';
     $phpWord->save($filename, 'Word2007');
     return $filename;
 }
@@ -43,7 +42,7 @@ function createPresentation() {
     $shape = $slide->createRichTextShape();
     $shape->createTextRun('Hello World!');
     
-    $filename = 'hello_world.pptx';
+    $filename = '../mnt/hello_world.pptx';
     $writer = \PhpOffice\PhpPresentation\IOFactory::createWriter($presentation, 'PowerPoint2007');
     $writer->save($filename);
     return $filename;
@@ -62,18 +61,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $file = createPresentation();
                 break;
         }
-        if (isset($file)) {
+        if (isset($file) && file_exists($file)) {
             header("Content-Type: application/octet-stream");
             header("Content-Transfer-Encoding: Binary");
-            header("Content-disposition: attachment; filename=\"" . $file . "\"");
+            header("Content-disposition: attachment; filename=\"" . basename($file) . "\"");
             readfile($file);
             unlink($file);
+            exit;
+        } else {
+            echo "Error: File not created or does not exist.";
             exit;
         }
     }
 }
-?>
 
+// Debug information
+if ($debug) {
+    echo "Current file: " . __FILE__ . "<br>";
+    echo "Current directory: " . getcwd() . "<br>";
+    echo "Parent directory contents:<br>";
+    print_r(scandir(dirname(__FILE__) . '/..'));
+    echo "<br>Vendor directory contents:<br>";
+    print_r(scandir(dirname(__FILE__) . '/../vendor'));
+    echo "<br>";
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
