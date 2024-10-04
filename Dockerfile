@@ -14,13 +14,14 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set the working directory
 WORKDIR /app
 
-# Clone the GitHub repository (replace with your actual GitHub repo URL)
-RUN git clone https://github.com/PHPOffice/PhpSpreadsheet.git /app/PhpSpreadsheet \
-    && git clone https://github.com/PHPOffice/PHPWord.git /app/PHPWord \
-    && git clone https://github.com/PHPOffice/PHPPresentation.git /app/PHPPresentation
+# Copy the composer.json and composer.lock (if it exists) to the working directory
+COPY composer.json composer.lock* ./
 
 # Install project dependencies using Composer
 RUN composer install --no-interaction --prefer-dist
+
+# Clone the GitHub repository (replace with your actual GitHub repo URL)
+RUN git clone https://github.com/fruitcake514/phpoffice-docker.git .
 
 # Copy Nginx configuration
 COPY nginx.conf /etc/nginx/sites-available/default
