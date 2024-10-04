@@ -1,41 +1,44 @@
-# Use the official PHP image from the Docker Hub
 FROM php:8.1-fpm
 
-# Install dependencies and required PHP extensions
+# Install dependencies
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
-    nginx \
     libzip-dev \
+    libxml2-dev \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
     libgd-dev \
-    supervisor \
-    && docker-php-ext-install pdo pdo_mysql zip gd
+    nginx \
+    supervisor
+
+# Install PHP extensions
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) zip xml gd
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Set the working directory for the application
 WORKDIR /app
 
-# Clone the GitHub repository (this will pull everything into /app)
+# Clone the repository
 RUN git clone https://github.com/fruitcake514/phpoffice-docker.git .
 
-# Install project dependencies using Composer
-RUN composer install --no-interaction --prefer-dist
+# Install PHPOffice libraries
+RUN composer require phpoffice/phpspreadsheet phpoffice/phpword phpoffice/phppresentation
 
-# Copy Nginx configuration
+# Copy configuration files
 COPY nginx.conf /etc/nginx/sites-available/default
-
-# Create Nginx log directories and set permissions
-RUN mkdir -p /var/log/nginx \
-    && chown -R www-data:www-data /var/log/nginx \
-    && chmod 755 /var/log/nginx
-
-# Copy supervisord configuration
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Expose the port
+# Create a simple PHP interface
+COPY index.php /app/public/index.php
+
+# Set permissions
+RUN chown -R www-data:www-data /app \
+    && chmod -R 755 /app
+
 EXPOSE 80
 
-# Start supervisord to manage Nginx and PHP-FPM
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
