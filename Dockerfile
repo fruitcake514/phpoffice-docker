@@ -15,7 +15,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /app
 
 # Clone the GitHub repository (replace with your actual GitHub repo URL)
-RUN git clone https://github.com/your-username/your-repo-name.git .
+RUN git clone https://github.com/fruitcake514/phpoffice-docker.git .
 
 # Install project dependencies using Composer
 RUN composer install
