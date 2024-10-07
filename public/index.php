@@ -1,10 +1,13 @@
 <?php
 // Debug mode flag
 $debug = true;
-
+ini_set('memory_limit', '256M');
+ob_clean();
+flush();
+ob_start();
 // If debug mode is on, display errors
 if ($debug) {
-    error_reporting(E_ALL);
+    error_reporting(E_ALL & ~E_DEPRECATED);  // Ignore deprecated warnings
     ini_set('display_errors', 1);
 }
 
@@ -73,7 +76,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo "Line: " . $e->getLine() . "<br>";
             echo "Trace: <pre>" . $e->getTraceAsString() . "</pre>";
             exit;
-        }
+        } finally {
+    if (file_exists($tempDir)) {
+        rmdir($tempDir);
+    }
+}
         
         if (isset($file) && file_exists($file)) {
             header("Content-Type: application/octet-stream");
@@ -81,6 +88,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header("Content-disposition: attachment; filename=\"" . basename($file) . "\"");
             readfile($file);
             unlink($file);
+            rmdir($tempDir);
+            ob_end_flush();
             exit;
         } else {
             echo "Error: File not created or does not exist.";
