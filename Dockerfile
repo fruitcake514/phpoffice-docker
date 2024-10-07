@@ -38,13 +38,7 @@ RUN composer install --no-dev --optimize-autoloader
 COPY nginx.conf /etc/nginx/sites-available/default
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Create mnt directory
-RUN mkdir -p /app/mnt
-
-# Set ownership and permissions
-RUN chown -R www-data:www-data /app \
-    && chmod -R 755 /app \
-    && chmod -R 777 /app/data
+RUN mkdir -p /app/data && chown -R www-data:www-data /app/data && chmod -R 755 /app/data
 
 # Configure PHP-FPM to run as www-data
 RUN sed -i 's/user = www-data/user = www-data/g' /usr/local/etc/php-fpm.d/www.conf \
