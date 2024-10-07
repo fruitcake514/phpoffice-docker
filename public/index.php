@@ -30,11 +30,15 @@ function listDirectory($dir) {
     foreach ($items as $item) {
         if ($item === '.' || $item === '..') continue;
         $path = $dir . '/' . $item;
+        $extension = pathinfo($path, PATHINFO_EXTENSION);
         if (is_dir($path)) {
             echo "<li class='list-group-item'><strong>Folder:</strong> <a href='?dir=$path'>$item</a></li>";
         } else {
-            echo "<li class='list-group-item'><strong>File:</strong> $item 
-                  <a href='?delete=$path' class='btn btn-danger btn-sm'>Delete</a></li>";
+            echo "<li class='list-group-item'><strong>File:</strong> $item ";
+            if (in_array($extension, ['docx', 'xlsx', 'pptx'])) {
+                echo "<a href='?edit=$path' class='btn btn-primary btn-sm'>Edit</a> ";
+            }
+            echo "<a href='?delete=$path' class='btn btn-danger btn-sm'>Delete</a></li>";
         }
     }
     echo "</ul>";
@@ -62,58 +66,97 @@ if (isset($_FILES['file'])) {
     move_uploaded_file($_FILES['file']['tmp_name'], $targetFile);
 }
 
-// Create PhpOffice files
-function createSpreadsheet($dir) {
-    $spreadsheet = new Spreadsheet();
-    $sheet = $spreadsheet->getActiveSheet();
-    $sheet->setCellValue('A1', 'Hello World!');
+if (isset($_GET['edit'])) {
+    $editPath = $_GET['edit'];
+    $extension = pathinfo($editPath, PATHINFO_EXTENSION);
     
-    $writer = new Xlsx($spreadsheet);
-    $filename = $dir . '/hello_world.xlsx';
-    $writer->save($filename);
-    return $filename;
-}
-
-function createDocument($dir) {
-    $phpWord = new PhpWord();
-    $section = $phpWord->addSection();
-    $section->addText('Hello World!');
-    
-    $filename = $dir . '/hello_world.docx';
-    $phpWord->save($filename, 'Word2007');
-    return $filename;
-}
-
-function createPresentation($dir) {
-    $presentation = new PhpPresentation();
-    $slide = $presentation->getActiveSlide();
-    $shape = $slide->createRichTextShape();
-    $shape->createTextRun('Hello World!');
-    
-    $filename = $dir . '/hello_world.pptx';
-    $writer = \PhpOffice\PhpPresentation\IOFactory::createWriter($presentation, 'PowerPoint2007');
-    $writer->save($filename);
-    return $filename;
-}
-
-// Create files based on user action
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    $file = null;
-    try {
-        switch ($_POST['action']) {
-            case 'spreadsheet':
-                $file = createSpreadsheet($currentDir);
-                break;
-            case 'document':
-                $file = createDocument($currentDir);
-                break;
-            case 'presentation':
-                $file = createPresentation($currentDir);
-                break;
-        }
-    } catch (Exception $e) {
-        echo "Error: " . $e->getMessage();
+    switch ($extension) {
+        case 'docx':
+            $phpWord = \PhpOffice\PhpWord\IOFactory::load($editPath);
+            $sections = $phpWord->getSections();
+            $content = '';
+            foreach ($sections as $section) {
+                foreach ($section->getElements() as $element) {
+                    if (method_exists($element, 'getText')) {
+                        $content .= $element->getText() . "\n";
+                    }
+                }
+            }
+            break;
+        
+        case 'xlsx':
+            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($editPath);
+            $content = '';
+            foreach ($spreadsheet->getWorksheetIterator() as $worksheet) {
+                foreach ($worksheet->getRowIterator() as $row) {
+                    foreach ($row->getCellIterator() as $cell) {
+                        $content .= $cell->getValue() . "\t";
+                    }
+                    $content .= "\n";
+                }
+            }
+            break;
+        
+        case 'pptx':
+            $presentation = \PhpOffice\PhpPresentation\IOFactory::load($editPath);
+            $content = '';
+            foreach ($presentation->getAllSlides() as $slide) {
+                foreach ($slide->getShapeCollection() as $shape) {
+                    if ($shape instanceof \PhpOffice\PhpPresentation\Shape\RichText) {
+                        $content .= $shape->getText() . "\n";
+                    }
+                }
+                $content .= "---\n";
+            }
+            break;
     }
+}
+
+// Save edited content
+if (isset($_POST['save_file'])) {
+    $savePath = $_POST['save_file'];
+    $newContent = $_POST['file_content'];
+    $extension = pathinfo($savePath, PATHINFO_EXTENSION);
+    
+    switch ($extension) {
+        case 'docx':
+            $phpWord = new PhpWord();
+            $section = $phpWord->addSection();
+            $lines = explode("\n", $newContent);
+            foreach ($lines as $line) {
+                $section->addText($line);
+            }
+            $writer = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007');
+            $writer->save($savePath);
+            break;
+        
+        case 'xlsx':
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            $rows = explode("\n", $newContent);
+            foreach ($rows as $rowIndex => $row) {
+                $cells = explode("\t", $row);
+                foreach ($cells as $columnIndex => $cell) {
+                    $sheet->setCellValueByColumnAndRow($columnIndex + 1, $rowIndex + 1, $cell);
+                }
+            }
+            $writer = new Xlsx($spreadsheet);
+            $writer->save($savePath);
+            break;
+        
+        case 'pptx':
+            $presentation = new PhpPresentation();
+            $slides = explode("---\n", $newContent);
+            foreach ($slides as $slideContent) {
+                $slide = $presentation->createSlide();
+                $shape = $slide->createRichTextShape();
+                $shape->createTextRun($slideContent);
+            }
+            $writer = \PhpOffice\PhpPresentation\IOFactory::createWriter($presentation, 'PowerPoint2007');
+            $writer->save($savePath);
+            break;
+    }
+    echo "<div class='alert alert-success'>File saved successfully.</div>";
 }
 
 // Debug information
@@ -134,8 +177,21 @@ if ($debug) {
     <h1>PHPOffice Suite - File Explorer</h1>
     
     <!-- File Explorer -->
+        <!-- File Explorer -->
     <h2>Directory: <?php echo $currentDir; ?></h2>
     <?php listDirectory($currentDir); ?>
+    
+    <!-- File Editor -->
+    <?php if (isset($content)): ?>
+    <h2>Edit File: <?php echo basename($editPath); ?></h2>
+    <form method="POST">
+        <div class="form-group">
+            <textarea name="file_content" class="form-control" rows="20"><?php echo htmlspecialchars($content); ?></textarea>
+        </div>
+        <input type="hidden" name="save_file" value="<?php echo $editPath; ?>">
+        <button type="submit" class="btn btn-success">Save Changes</button>
+    </form>
+    <?php endif; ?>
     
     <!-- Create Folder -->
     <form method="POST">
