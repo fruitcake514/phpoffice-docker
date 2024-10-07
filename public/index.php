@@ -31,7 +31,7 @@ function createDocument() {
     $section = $phpWord->addSection();
     $section->addText('Hello World!');
     
-    $filename = '/app/mnt/hello_world.docx';
+    $filename = '/app/data/hello_world.docx';
     $phpWord->save($filename, 'Word2007');
     return $filename;
 }
