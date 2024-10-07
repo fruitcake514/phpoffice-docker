@@ -21,8 +21,66 @@ use PhpOffice\PhpPresentation\PhpPresentation;
 // Define base directory
 $baseDir = __DIR__ . '/data';
 $currentDir = isset($_GET['dir']) ? $_GET['dir'] : $baseDir;
-if (!is_dir($currentDir)) $currentDir = $baseDir;
 
+if (!is_dir($currentDir)) $currentDir = $baseDir;
+// Create PhpOffice files
+function createSpreadsheet($dir) {
+    $spreadsheet = new Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
+    $sheet->setCellValue('A1', 'Hello World!');
+    
+    $writer = new Xlsx($spreadsheet);
+    $filename = $dir . '/hello_world_' . time() . '.xlsx';
+    $writer->save($filename);
+    return $filename;
+}
+
+function createDocument($dir) {
+    $phpWord = new PhpWord();
+    $section = $phpWord->addSection();
+    $section->addText('Hello World!');
+    
+    $filename = $dir . '/hello_world_' . time() . '.docx';
+    $phpWord->save($filename, 'Word2007');
+    return $filename;
+}
+
+function createPresentation($dir) {
+    $presentation = new PhpPresentation();
+    $slide = $presentation->getActiveSlide();
+    $shape = $slide->createRichTextShape();
+    $shape->createTextRun('Hello World!');
+    
+    $filename = $dir . '/hello_world_' . time() . '.pptx';
+    $writer = \PhpOffice\PhpPresentation\IOFactory::createWriter($presentation, 'PowerPoint2007');
+    $writer->save($filename);
+    return $filename;
+}
+
+// Create files based on user action
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    $file = null;
+    try {
+        switch ($_POST['action']) {
+            case 'spreadsheet':
+                $file = createSpreadsheet($currentDir);
+                break;
+            case 'document':
+                $file = createDocument($currentDir);
+                break;
+            case 'presentation':
+                $file = createPresentation($currentDir);
+                break;
+        }
+        if ($file) {
+            echo "<div class='alert alert-success'>File created successfully: " . basename($file) . "</div>";
+        } else {
+            echo "<div class='alert alert-danger'>Failed to create file.</div>";
+        }
+    } catch (Exception $e) {
+        echo "<div class='alert alert-danger'>Error: " . $e->getMessage() . "</div>";
+    }
+}
 // File and Folder Functions
 function listDirectory($dir) {
     $items = scandir($dir);
@@ -38,7 +96,7 @@ function listDirectory($dir) {
             if (in_array($extension, ['docx', 'xlsx', 'pptx'])) {
                 echo "<a href='?edit=$path' class='btn btn-primary btn-sm'>Edit</a> ";
             }
-            echo "<a href='?delete=$path' class='btn btn-danger btn-sm'>Delete</a></li>";
+            echo "<a href='?delete=$path' class='btn btn-danger btn-sm' onclick='return confirm(\"Are you sure you want to delete this file?\");'>Delete</a></li>";
         }
     }
     echo "</ul>";
