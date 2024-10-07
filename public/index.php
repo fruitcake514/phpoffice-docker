@@ -15,34 +15,38 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpPresentation\PhpPresentation;
 
-function createSpreadsheet() {
+// Create a temporary directory
+$tempDir = sys_get_temp_dir() . '/phpoffice_' . uniqid();
+mkdir($tempDir, 0777, true);
+
+function createSpreadsheet($tempDir) {
     $spreadsheet = new Spreadsheet();
     $sheet = $spreadsheet->getActiveSheet();
     $sheet->setCellValue('A1', 'Hello World!');
     
     $writer = new Xlsx($spreadsheet);
-    $filename = '/app/mnt/hello_world.xlsx';
+    $filename = $tempDir . '/hello_world.xlsx';
     $writer->save($filename);
     return $filename;
 }
 
-function createDocument() {
+function createDocument($tempDir) {
     $phpWord = new PhpWord();
     $section = $phpWord->addSection();
     $section->addText('Hello World!');
     
-    $filename = '/app/data/hello_world.docx';
+    $filename = $tempDir . '/hello_world.docx';
     $phpWord->save($filename, 'Word2007');
     return $filename;
 }
 
-function createPresentation() {
+function createPresentation($tempDir) {
     $presentation = new PhpPresentation();
     $slide = $presentation->getActiveSlide();
     $shape = $slide->createRichTextShape();
     $shape->createTextRun('Hello World!');
     
-    $filename = '/app/mnt/hello_world.pptx';
+    $filename = $tempDir . '/hello_world.pptx';
     $writer = \PhpOffice\PhpPresentation\IOFactory::createWriter($presentation, 'PowerPoint2007');
     $writer->save($filename);
     return $filename;
@@ -54,13 +58,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             switch ($_POST['action']) {
                 case 'spreadsheet':
-                    $file = createSpreadsheet();
+                    $file = createSpreadsheet($tempDir);
                     break;
                 case 'document':
-                    $file = createDocument();
+                    $file = createDocument($tempDir);
                     break;
                 case 'presentation':
-                    $file = createPresentation();
+                    $file = createPresentation($tempDir);
                     break;
             }
         } catch (Exception $e) {
@@ -90,14 +94,14 @@ if ($debug) {
     echo "Current file: " . __FILE__ . "<br>";
     echo "Current directory: " . getcwd() . "<br>";
     echo "Current user: " . exec('whoami') . "<br>";
+    echo "Temporary directory: " . $tempDir . "<br>";
+    echo "Temporary directory permissions: " . substr(sprintf('%o', fileperms($tempDir)), -4) . "<br>";
     echo "Parent directory contents:<br>";
     print_r(scandir(dirname(__FILE__) . '/..'));
     echo "<br>Vendor directory contents:<br>";
     print_r(scandir(dirname(__FILE__) . '/../vendor'));
-    echo "<br>Mnt directory contents:<br>";
-    print_r(scandir('/app/mnt'));
-    echo "<br>Mnt directory permissions:<br>";
-    echo exec('ls -l /app/mnt');
+    echo "<br>Temp directory contents:<br>";
+    print_r(scandir($tempDir));
     echo "<br>";
 }
 ?>
