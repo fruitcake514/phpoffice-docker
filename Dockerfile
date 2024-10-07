@@ -25,6 +25,12 @@ WORKDIR /app
 # Clone the repository
 RUN git clone https://github.com/fruitcake514/phpoffice-docker.git .
 
+# Copy the updated composer.json
+COPY composer.json .
+
+# Set COMPOSER_ALLOW_SUPERUSER environment variable
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
 # Install PHPOffice libraries
 RUN composer install --no-dev --optimize-autoloader
 
@@ -33,7 +39,7 @@ COPY nginx.conf /etc/nginx/sites-available/default
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Create mnt directory
-RUN mkdir -p /app/data
+RUN mkdir -p /app/mnt
 
 # Set ownership and permissions
 RUN chown -R www-data:www-data /app \
