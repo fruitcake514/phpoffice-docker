@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-$mountPath = '../mnt'; // Adjust as necessary
+$mountPath = '../data'; // Adjust as necessary
 
 function listFiles($dir) {
     $files = array_diff(scandir($dir), array('.', '..'));
