@@ -25,12 +25,6 @@ WORKDIR /app
 # Clone the repository
 RUN git clone https://github.com/fruitcake514/phpoffice-docker.git .
 
-# Copy the updated composer.json
-COPY composer.json .
-
-# Set COMPOSER_ALLOW_SUPERUSER environment variable
-ENV COMPOSER_ALLOW_SUPERUSER=1
-
 # Install PHPOffice libraries
 RUN composer install --no-dev --optimize-autoloader
 
@@ -38,7 +32,11 @@ RUN composer install --no-dev --optimize-autoloader
 COPY nginx.conf /etc/nginx/sites-available/default
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-RUN mkdir -p /app/data && chown -R www-data:www-data /app/data && chmod -R 755 /app/data
+# Create data directory and set permissions
+RUN mkdir -p /app/public/data \
+    && chown -R www-data:www-data /app \
+    && chmod -R 755 /app \
+    && chmod -R 777 /app/public/data
 
 # Configure PHP-FPM to run as www-data
 RUN sed -i 's/user = www-data/user = www-data/g' /usr/local/etc/php-fpm.d/www.conf \
