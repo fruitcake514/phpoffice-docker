@@ -19,7 +19,7 @@ use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpPresentation\PhpPresentation;
 
 // Define base directory
-$baseDir = __DIR__ . '/storage';
+$baseDir = __DIR__ . '/data';
 $currentDir = isset($_GET['dir']) ? $_GET['dir'] : $baseDir;
 if (!is_dir($currentDir)) $currentDir = $baseDir;
 
