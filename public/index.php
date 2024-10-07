@@ -17,12 +17,17 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpPresentation\PhpPresentation;
-
 // Define base directory
 $baseDir = __DIR__ . '/data';
+if (!is_dir($baseDir)) {
+    mkdir($baseDir, 0777, true);
+}
+if (!is_writable($baseDir)) {
+    die("Error: Data directory is not writable. Please check permissions.");
+}
 $currentDir = isset($_GET['dir']) ? $_GET['dir'] : $baseDir;
-
 if (!is_dir($currentDir)) $currentDir = $baseDir;
+
 // Create PhpOffice files
 function createSpreadsheet($dir) {
     $spreadsheet = new Spreadsheet();
@@ -55,31 +60,6 @@ function createPresentation($dir) {
     $writer = \PhpOffice\PhpPresentation\IOFactory::createWriter($presentation, 'PowerPoint2007');
     $writer->save($filename);
     return $filename;
-}
-
-// Create files based on user action
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    $file = null;
-    try {
-        switch ($_POST['action']) {
-            case 'spreadsheet':
-                $file = createSpreadsheet($currentDir);
-                break;
-            case 'document':
-                $file = createDocument($currentDir);
-                break;
-            case 'presentation':
-                $file = createPresentation($currentDir);
-                break;
-        }
-        if ($file) {
-            echo "<div class='alert alert-success'>File created successfully: " . basename($file) . "</div>";
-        } else {
-            echo "<div class='alert alert-danger'>Failed to create file.</div>";
-        }
-    } catch (Exception $e) {
-        echo "<div class='alert alert-danger'>Error: " . $e->getMessage() . "</div>";
-    }
 }
 // File and Folder Functions
 function listDirectory($dir) {
@@ -216,7 +196,32 @@ if (isset($_POST['save_file'])) {
     }
     echo "<div class='alert alert-success'>File saved successfully.</div>";
 }
-
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    $file = null;
+    try {
+        switch ($_POST['action']) {
+            case 'spreadsheet':
+                $file = createSpreadsheet($currentDir);
+                break;
+            case 'document':
+                $file = createDocument($currentDir);
+                break;
+            case 'presentation':
+                $file = createPresentation($currentDir);
+                break;
+        }
+        if ($file) {
+            echo "<div class='alert alert-success'>File created successfully: " . basename($file) . "</div>";
+            error_log("File created: " . $file); // Add this line
+        } else {
+            echo "<div class='alert alert-danger'>Failed to create file.</div>";
+            error_log("Failed to create file"); // Add this line
+        }
+    } catch (Exception $e) {
+        echo "<div class='alert alert-danger'>Error: " . $e->getMessage() . "</div>";
+        error_log("Error creating file: " . $e->getMessage()); // Add this line
+    }
+}
 // Debug information
 if ($debug) {
     echo "Current directory: " . $currentDir . "<br>";
@@ -232,10 +237,9 @@ if ($debug) {
     <title>PHPOffice Suite</title>
 </head>
 <body class="container">
-    <h1>PHPOffice Suite - File Explorer</h1>
+        <h1>PHPOffice Suite - File Explorer</h1>
     
     <!-- File Explorer -->
-        <!-- File Explorer -->
     <h2>Directory: <?php echo $currentDir; ?></h2>
     <?php listDirectory($currentDir); ?>
     
@@ -260,7 +264,7 @@ if ($debug) {
         <button type="submit" name="new_folder" class="btn btn-primary">Create Folder</button>
     </form>
 
-    <!-- Create Files with PhpOffice -->
+     <!-- Create Files with PhpOffice -->
     <h2>Create New File</h2>
     <form method="POST">
         <div class="btn-group" role="group">
@@ -279,5 +283,19 @@ if ($debug) {
         </div>
         <button type="submit" class="btn btn-warning">Upload File</button>
     </form>
+<script>
+// Refresh the page after form submissions
+document.addEventListener('DOMContentLoaded', function() {
+    const forms = document.querySelectorAll('form');
+    forms.forEach(form => {
+        form.addEventListener('submit', function() {
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        });
+    });
+});
+</script>
+
 </body>
 </html>
